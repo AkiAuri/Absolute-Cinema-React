@@ -21,7 +21,13 @@ export async function POST(request) {
         const genres = movieData.genres.map(g => g.name).join(', ');
 
         // 3. Insert the new movie into D1
-        const db = process.env.DB;
+        // Get the D1 binding from the request context (Cloudflare Workers binding)
+        const db = request.cf?.env?.DB;
+
+        if (!db) {
+            return Response.json({ error: "Database binding not found. Check your wrangler.toml configuration." }, { status: 500 });
+        }
+
         await db.prepare(`
             INSERT INTO movies (id, title, genre, duration, poster, status, synopsis)
             VALUES (?, ?, ?, ?, ?, ?, ?)
