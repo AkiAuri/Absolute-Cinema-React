@@ -1,10 +1,20 @@
-import { env } from "cloudflare:workers";
-
 export async function POST(request) {
     try {
         const { tmdbId } = await request.json();
 
-        // Use the global env import for Cloudflare Pages
+        // For Cloudflare Pages, get the env from request.cf.ctx
+        // or through the context object that OpenNext provides
+        let env;
+
+        if (request.cf?.env) {
+            env = request.cf.env;
+        } else if (typeof globalThis !== 'undefined' && globalThis.__CLOUDFLARE_ENV__) {
+            env = globalThis.__CLOUDFLARE_ENV__;
+        } else {
+            // Fallback: try process.env (works with nodejs_compat)
+            env = process.env;
+        }
+
         const TMDB_API_KEY = env.TMDB_API_KEY;
 
         if (!TMDB_API_KEY) {
