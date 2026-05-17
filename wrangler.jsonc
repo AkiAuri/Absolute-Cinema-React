@@ -12,9 +12,6 @@
 		"directory": ".open-next/assets",
 		"binding": "ASSETS"
 	},
-	"secrets": {
-		"required": ["TMDB_API_KEY"]
-	},
 	"services": [
 		{
 			"binding": "WORKER_SELF_REFERENCE",
