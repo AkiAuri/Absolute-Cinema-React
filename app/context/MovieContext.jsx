@@ -24,17 +24,31 @@ export function MovieProvider({ children }) {
     fetchMovies();
   }, []);
 
-  const addMovie = async (movieData) => {
-    // NOTE: This will only update the local UI for now.
-    // In our next step, we will update this to send a POST request to TMDB/D1!
-    const newMovie = {
-      id: Date.now(),
-      ...movieData,
-      duration: parseInt(movieData.duration),
-      poster: movieData.poster || 'https://images.unsplash.com/photo-1489749798305-4fea3ba63d60?w=300&h=450&fit=crop',
-    };
-    setMovies([...movies, newMovie]);
-    return newMovie;
+  const addMovie = async (tmdbId) => {
+    try {
+      const response = await fetch('/api/movies/add', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        // We only send the ID! The server does the heavy lifting.
+        body: JSON.stringify({ tmdbId }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to add movie');
+      }
+
+      // Add the real, newly fetched movie from the server into our React state
+      setMovies((prevMovies) => [...prevMovies, data.movie]);
+      return data.movie;
+
+    } catch (error) {
+      console.error("Error adding movie from TMDB:", error);
+      throw error; // Let the component know it failed so it can show a toast/alert
+    }
   };
 
   const updateMovie = (id, movieData) => {
