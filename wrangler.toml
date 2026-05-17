@@ -1,8 +1,0 @@
-name = "absolute-cinema-react"
-compatibility_date = "2024-03-20"
-pages_build_output_dir = ".next"
-
-[[d1_databases]]
-binding = "DB"
-database_name = "absolute-cinema-db"
-database_id = "3378bf09-92c7-4e4d-a3ab-4b2adc427194"
