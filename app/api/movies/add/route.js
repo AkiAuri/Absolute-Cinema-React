@@ -1,12 +1,22 @@
+import { getCloudflareContext } from "@opennextjs/cloudflare";
+
 export async function POST(request) {
     try {
         const { tmdbId } = await request.json();
 
-        // 1. Get TMDB API Key from standard env
-        const TMDB_API_KEY = process.env.TMDB_API_KEY;
+        // 1. Get the actual Cloudflare environment bindings
+        const { env } = getCloudflareContext();
+
+        // Standard env fallback in case you are testing locally without bindings
+        const TMDB_API_KEY = env.TMDB_API_KEY || process.env.TMDB_API_KEY;
+        const db = env.DB;
 
         if (!TMDB_API_KEY) {
             return Response.json({ error: "TMDB API key is missing on the server." }, { status: 500 });
+        }
+
+        if (!db) {
+            return Response.json({ error: "Database binding not found." }, { status: 500 });
         }
 
         // 2. Fetch real movie data from TMDB
@@ -20,15 +30,7 @@ export async function POST(request) {
         const posterUrl = `https://image.tmdb.org/t/p/w500${movieData.poster_path}`;
         const genres = movieData.genres.map(g => g.name).join(', ');
 
-        // 4. Safely access the D1 binding in an OpenNext environment
-        const db = process.env.DB || globalThis.cloudflare?.env?.DB;
-
-        if (!db) {
-            console.error("Database binding not found. Are you running in standard 'next dev'?");
-            return Response.json({ error: "Database binding not found." }, { status: 500 });
-        }
-
-        // 5. Insert the new movie into D1
+        // 4. Insert the new movie into D1
         await db.prepare(`
             INSERT INTO movies (id, title, genre, duration, poster, status, synopsis)
             VALUES (?, ?, ?, ?, ?, ?, ?)
