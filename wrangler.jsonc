@@ -2,6 +2,7 @@
 	"$schema": "node_modules/wrangler/config-schema.json",
 	"main": ".open-next/worker.js",
 	"name": "absolute-cinema-react",
+	"account_id": "c44daf30f574824a41e8b1548c1e06c1",
 	"compatibility_date": "2026-05-17",
 	"compatibility_flags": [
 		"nodejs_compat",
