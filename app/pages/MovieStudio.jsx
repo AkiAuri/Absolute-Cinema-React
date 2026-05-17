@@ -10,6 +10,8 @@ function MovieStudio() {
   const [imageInputType, setImageInputType] = useState('url'); // 'url' or 'upload'
   const [imagePreview, setImagePreview] = useState('');
   const fileInputRef = useRef(null);
+  const [tmdbIdInput, setTmdbIdInput] = useState('');
+  const [isAdding, setIsAdding] = useState(false);
   const [formData, setFormData] = useState({
     title: '',
     genre: '',
@@ -60,24 +62,24 @@ function MovieStudio() {
     }
   };
 
-  const handleAddMovie = (e) => {
+  const handleAddMovie = async (e) => {
     e.preventDefault();
-    addMovie({
-      ...formData,
-      poster: formData.poster || 'https://images.unsplash.com/photo-1489749798305-4fea3ba63d60?w=300&h=450&fit=crop',
-    });
-    setFormData({
-      title: '',
-      genre: '',
-      rating: 'PG-13',
-      duration: '',
-      status: 'now-showing',
-      synopsis: '',
-      poster: '',
-    });
-    setImagePreview('');
-    setImageInputType('url');
-    setShowAddForm(false);
+    if (!tmdbIdInput.trim()) return;
+
+    setIsAdding(true);
+    try {
+      // Calls our new Context function, which hits our Cloudflare API!
+      await addMovie(tmdbIdInput.trim());
+
+      // Reset form on success
+      setTmdbIdInput('');
+      setShowAddForm(false);
+      alert("Movie successfully added from TMDB!"); // Optional: replace with a toast if you have one
+    } catch (error) {
+      alert("Error adding movie: " + error.message);
+    } finally {
+      setIsAdding(false);
+    }
   };
 
   const handleUpdateMovie = (e) => {
@@ -212,186 +214,51 @@ function MovieStudio() {
             </div>
 
             <form onSubmit={handleAddMovie}>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                <div>
-                  <label className="block text-green-300/80 text-sm font-medium mb-2">Movie Title</label>
-                  <input
-                    type="text"
-                    name="title"
-                    value={formData.title}
-                    onChange={handleFormChange}
-                    placeholder="Enter movie title"
-                    className="w-full bg-gray-800/80 border border-green-500/20 text-white px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-green-300/80 text-sm font-medium mb-2">Genre</label>
-                  <input
-                    type="text"
-                    name="genre"
-                    value={formData.genre}
-                    onChange={handleFormChange}
-                    placeholder="e.g., Action, Drama, Comedy"
-                    className="w-full bg-gray-800/80 border border-green-500/20 text-white px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-green-300/80 text-sm font-medium mb-2">Rating</label>
-                  <select
-                    name="rating"
-                    value={formData.rating}
-                    onChange={handleFormChange}
-                    className="w-full bg-gray-800/80 border border-green-500/20 text-white px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition"
-                  >
-                    <option value="G">G</option>
-                    <option value="PG">PG</option>
-                    <option value="PG-13">PG-13</option>
-                    <option value="R">R</option>
-                    <option value="NC-17">NC-17</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-green-300/80 text-sm font-medium mb-2">Duration (minutes)</label>
-                  <input
-                    type="number"
-                    name="duration"
-                    value={formData.duration}
-                    onChange={handleFormChange}
-                    placeholder="120"
-                    className="w-full bg-gray-800/80 border border-green-500/20 text-white px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-green-300/80 text-sm font-medium mb-2">Status</label>
-                  <select
-                    name="status"
-                    value={formData.status}
-                    onChange={handleFormChange}
-                    className="w-full bg-gray-800/80 border border-green-500/20 text-white px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition"
-                  >
-                    <option value="now-showing">Now Showing</option>
-                    <option value="upcoming">Coming Soon</option>
-                  </select>
-                </div>
-              </div>
-
-              {/* Movie Poster Image Section */}
               <div className="mb-6">
-                <label className="block text-green-300/80 text-sm font-medium mb-2">Movie Poster</label>
-                
-                {/* Toggle between URL and Upload */}
-                <div className="flex gap-2 mb-3">
-                  <button
-                    type="button"
-                    onClick={() => setImageInputType('url')}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition ${
-                      imageInputType === 'url'
-                        ? 'bg-green-600 text-white'
-                        : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-                    }`}
-                  >
-                    <LinkIcon size={16} />
-                    URL
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setImageInputType('upload')}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition ${
-                      imageInputType === 'upload'
-                        ? 'bg-green-600 text-white'
-                        : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-                    }`}
-                  >
-                    <Upload size={16} />
-                    Upload
-                  </button>
-                </div>
-
-                {/* URL Input */}
-                {imageInputType === 'url' && (
+                <label className="block text-green-300/80 text-sm font-medium mb-2">
+                  TMDB Movie ID
+                </label>
+                <div className="flex gap-4">
                   <input
-                    type="url"
-                    name="poster"
-                    value={formData.poster}
-                    onChange={handleFormChange}
-                    placeholder="https://example.com/movie-poster.jpg"
-                    className="w-full bg-gray-800/80 border border-green-500/20 text-white px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition"
+                      type="text"
+                      value={tmdbIdInput}
+                      onChange={(e) => setTmdbIdInput(e.target.value)}
+                      placeholder="e.g., 157336"
+                      className="flex-1 bg-gray-800/80 border border-green-500/20 text-white px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition"
+                      required
+                      disabled={isAdding}
                   />
-                )}
-
-                {/* File Upload */}
-                {imageInputType === 'upload' && (
-                  <div className="flex flex-col gap-3">
-                    <label className="flex items-center justify-center gap-2 w-full bg-gray-800/80 border-2 border-dashed border-green-500/30 text-green-400 px-4 py-6 rounded-lg hover:border-green-500/50 hover:bg-gray-800 transition cursor-pointer">
-                      <Upload size={20} />
-                      <span>Click to upload image</span>
-                      <input
-                        ref={fileInputRef}
-                        type="file"
-                        accept="image/*"
-                        onChange={handleImageUpload}
-                        className="hidden"
-                      />
-                    </label>
-                  </div>
-                )}
-
-                {/* Image Preview */}
-                {imagePreview && (
-                  <div className="mt-3 flex items-start gap-4">
-                    <img
-                      src={imagePreview}
-                      alt="Poster preview"
-                      className="w-24 h-36 object-cover rounded-lg border border-green-500/30"
-                    />
-                    <div className="flex flex-col gap-2">
-                      <p className="text-green-400 text-sm">Poster preview</p>
-                      <button
-                        type="button"
-                        onClick={clearImagePreview}
-                        className="flex items-center gap-1 text-red-400 hover:text-red-300 text-sm"
-                      >
-                        <X size={14} />
-                        Remove
-                      </button>
-                    </div>
-                  </div>
-                )}
-
-                {!imagePreview && (
-                  <p className="text-gray-500 text-xs mt-2">
-                    Leave empty to use a default placeholder image
-                  </p>
-                )}
+                </div>
+                <p className="text-green-400/60 text-xs mt-2 flex items-center gap-1">
+                  Find the ID in the URL of any movie on themoviedb.org
+                  (e.g., themoviedb.org/movie/<strong className="text-green-300">157336</strong>-interstellar)
+                </p>
               </div>
 
-              <div className="mb-6">
-                <label className="block text-green-300/80 text-sm font-medium mb-2">Synopsis</label>
-                <textarea
-                  name="synopsis"
-                  value={formData.synopsis}
-                  onChange={handleFormChange}
-                  placeholder="Enter movie synopsis"
-                  rows="4"
-                  className="w-full bg-gray-800/80 border border-green-500/20 text-white px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition"
-                  required
-                ></textarea>
-              </div>
               <div className="flex gap-4">
                 <button
-                  type="submit"
-                  className="flex-1 flex items-center justify-center gap-2 bg-green-600 text-white py-3 rounded-lg hover:bg-green-700 transition font-bold"
+                    type="submit"
+                    disabled={isAdding}
+                    className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-lg transition font-bold ${
+                        isAdding
+                            ? 'bg-green-600/50 text-white/70 cursor-wait'
+                            : 'bg-green-600 text-white hover:bg-green-700'
+                    }`}
                 >
-                  <Plus size={20} />
-                  Add Movie
+                  {isAdding ? (
+                      'Fetching Data...'
+                  ) : (
+                      <>
+                        <Plus size={20} />
+                        Import from TMDB
+                      </>
+                  )}
                 </button>
                 <button
-                  type="button"
-                  onClick={closeAddForm}
-                  className="flex-1 bg-gray-700 text-white py-3 rounded-lg hover:bg-gray-600 transition font-bold"
+                    type="button"
+                    onClick={closeAddForm}
+                    disabled={isAdding}
+                    className="flex-1 bg-gray-700 text-white py-3 rounded-lg hover:bg-gray-600 transition font-bold disabled:opacity-50"
                 >
                   Cancel
                 </button>
