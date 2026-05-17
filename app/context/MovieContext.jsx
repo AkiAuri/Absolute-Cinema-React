@@ -51,14 +51,60 @@ export function MovieProvider({ children }) {
     }
   };
 
-  const updateMovie = (id, movieData) => {
-    setMovies(movies.map((movie) =>
-        movie.id === id ? { ...movie, ...movieData } : movie
-    ));
+  const updateMovie = async (id, movieData) => {
+    try {
+      // 1. Find the existing movie and merge the new data.
+      // This ensures that if a field (like 'poster') isn't included in the update form,
+      // we still send the existing poster URL to the database instead of null.
+      const existingMovie = movies.find(m => m.id === id);
+      const updatedPayload = { ...existingMovie, ...movieData };
+
+      // 2. Send the PUT request to the backend
+      const response = await fetch(`/api/movies/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(updatedPayload),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to update movie');
+      }
+
+      // 3. If successful, update the React state so the UI reflects the change
+      setMovies((prevMovies) =>
+          prevMovies.map((movie) =>
+              movie.id === id ? updatedPayload : movie
+          )
+      );
+
+    } catch (error) {
+      console.error("Error updating movie:", error);
+      alert("Failed to update movie: " + error.message);
+    }
   };
 
-  const deleteMovie = (id) => {
-    setMovies(movies.filter((m) => m.id !== id));
+  const deleteMovie = async (id) => {
+    try {
+      // 1. Send DELETE request to the backend
+      const response = await fetch(`/api/movies/${id}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || 'Failed to delete movie');
+      }
+
+      // 2. If successful, remove it from the React state
+      setMovies((prevMovies) => prevMovies.filter((m) => m.id !== id));
+
+    } catch (error) {
+      console.error("Error deleting movie:", error);
+      alert("Failed to delete movie: " + error.message);
+    }
   };
 
   const getMovies = () => movies;
