@@ -1,5 +1,3 @@
-export const runtime = 'edge';
-
 export async function GET() {
     try {
         // Access the D1 Database binding configured in your wrangler.jsonc
