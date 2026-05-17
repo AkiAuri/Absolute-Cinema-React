@@ -1,13 +1,14 @@
-export async function POST(request, context) {
+import { env } from "cloudflare:workers";
+
+export async function POST(request) {
     try {
         const { tmdbId } = await request.json();
 
-        // Get env from Pages context
-        const env = context.env;
+        // Use the global env import for Cloudflare Pages
         const TMDB_API_KEY = env.TMDB_API_KEY;
 
         if (!TMDB_API_KEY) {
-            return Response.json({ error: "TMDB API key is missing." }, { status: 500 });
+            return Response.json({ error: "TMDB API key is missing on the server." }, { status: 500 });
         }
 
         // 1. Fetch real movie data from TMDB
