@@ -2,18 +2,8 @@ export async function POST(request) {
     try {
         const { tmdbId } = await request.json();
 
-        // For Cloudflare Pages, get the env from request.cf.ctx
-        // or through the context object that OpenNext provides
-        let env;
-
-        if (request.cf?.env) {
-            env = request.cf.env;
-        } else if (typeof globalThis !== 'undefined' && globalThis.__CLOUDFLARE_ENV__) {
-            env = globalThis.__CLOUDFLARE_ENV__;
-        } else {
-            // Fallback: try process.env (works with nodejs_compat)
-            env = process.env;
-        }
+        // Get env - try multiple paths for OpenNext compatibility
+        let env = request.cf?.env || process.env;
 
         const TMDB_API_KEY = env.TMDB_API_KEY;
 
@@ -33,9 +23,25 @@ export async function POST(request) {
         const genres = movieData.genres.map(g => g.name).join(', ');
 
         // 3. Insert the new movie into D1
-        const db = env.DB;
+        // Try multiple ways to access the DB binding
+        let db = env.DB;
+
         if (!db) {
-            return Response.json({ error: "Database binding not found." }, { status: 500 });
+            // If env.DB doesn't work, try request.cf.env.DB directly
+            db = request.cf?.env?.DB;
+        }
+
+        if (!db) {
+            console.error("Available env keys:", Object.keys(env || {}));
+            console.error("Request CF:", request.cf);
+            return Response.json({
+                error: "Database binding not found. Check wrangler.jsonc configuration.",
+                debug: {
+                    hasEnv: !!env,
+                    hasCF: !!request.cf,
+                    envKeys: Object.keys(env || {})
+                }
+            }, { status: 500 });
         }
 
         await db.prepare(`
