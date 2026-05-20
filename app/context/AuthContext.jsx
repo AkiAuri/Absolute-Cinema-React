@@ -6,33 +6,57 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Initialize from localStorage
+  // Check the HTTP-Only cookie when the app loads
   useEffect(() => {
-    const storedUser = localStorage.getItem('user');
-    if (storedUser) {
+    const verifySession = async () => {
       try {
-        setUser(JSON.parse(storedUser));
-      } catch (e) {
-        console.error('Failed to parse stored user:', e);
-        localStorage.removeItem('user');
+        const response = await fetch('/api/users/me');
+        if (response.ok) {
+          const data = await response.json();
+          setUser(data.user);
+        }
+      } catch (error) {
+        console.error('Session verification failed:', error);
+      } finally {
+        setLoading(false);
       }
-    }
-    setLoading(false);
+    };
+
+    verifySession();
   }, []);
 
-  const login = (userData) => {
-    setUser(userData);
-    localStorage.setItem('user', JSON.stringify(userData));
+  // Update login to expect individual parameters
+  const login = async (email, password) => {
+    const response = await fetch('/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password }),
+    });
+
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error);
+
+    setUser(data.user);
+    return data.user;
   };
 
-  const logout = () => {
+  const signup = async (name, email, password) => {
+    const response = await fetch('/api/auth/signup', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, email, password }),
+    });
+
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error);
+
+    // If signup is successful, auto-login the user
+    return login(email, password);
+  };
+
+  const logout = async () => {
+    await fetch('/api/auth/logout', { method: 'POST' });
     setUser(null);
-    localStorage.removeItem('user');
-  };
-
-  const signup = (userData) => {
-    setUser(userData);
-    localStorage.setItem('user', JSON.stringify(userData));
   };
 
   const value = {
