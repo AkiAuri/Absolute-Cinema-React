@@ -1,61 +1,66 @@
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 
-export async function DELETE(request, { params }) {
+// 1. Force Cloudflare NOT to cache this dynamic route
+export const dynamic = 'force-dynamic';
+
+// Handle updating a movie (PUT)
+export async function PUT(request, { params }) {
     try {
+        // Next.js 15+ safely unwraps params, and we force the ID to an Integer for D1
+        const resolvedParams = await params;
+        const movieId = parseInt(resolvedParams.id, 10);
+
+        const body = await request.json();
+
         const { env } = getCloudflareContext();
         const db = env.DB;
-
-        // Grab the ID from the URL (/api/movies/[id])
-        const { id } = params;
 
         if (!db) {
             return Response.json({ error: "Database binding not found." }, { status: 500 });
         }
 
-        // Delete the movie from the D1 database
-        const info = await db.prepare("DELETE FROM movies WHERE id = ?").bind(id).run();
+        // Run the UPDATE query, making sure duration is also a strict number
+        await db.prepare(`
+            UPDATE movies 
+            SET title = ?, genre = ?, rating = ?, duration = ?, status = ?, synopsis = ?
+            WHERE id = ?
+        `).bind(
+            body.title,
+            body.genre,
+            body.rating,
+            parseInt(body.duration, 10),
+            body.status,
+            body.synopsis,
+            movieId
+        ).run();
 
-        if (info.success) {
-            return Response.json({ success: true, message: "Movie deleted" }, { status: 200 });
-        } else {
-            return Response.json({ error: "Failed to delete movie from database" }, { status: 400 });
-        }
+        return Response.json({ success: true, message: "Movie updated successfully" }, { status: 200 });
+
     } catch (error) {
-        console.error("Database Error:", error);
-        return Response.json({ error: "Failed to delete movie" }, { status: 500 });
+        console.error("PUT Error:", error);
+        return Response.json({ error: "Failed to update movie: " + error.message }, { status: 500 });
     }
 }
 
-export async function PUT(request, { params }) {
+// Handle deleting a movie (DELETE)
+export async function DELETE(request, { params }) {
     try {
+        const resolvedParams = await params;
+        const movieId = parseInt(resolvedParams.id, 10);
+
         const { env } = getCloudflareContext();
         const db = env.DB;
-        const { id } = params;
-
-        // Get the updated movie data from the request body
-        const data = await request.json();
 
         if (!db) {
             return Response.json({ error: "Database binding not found." }, { status: 500 });
         }
 
-        // Destructure the data
-        const { title, genre, rating, duration, status, synopsis, poster } = data;
+        await db.prepare(`DELETE FROM movies WHERE id = ?`).bind(movieId).run();
 
-        // Update the movie in the D1 database
-        const info = await db.prepare(
-            `UPDATE movies 
-             SET title = ?, genre = ?, rating = ?, duration = ?, status = ?, synopsis = ?, poster = ?
-             WHERE id = ?`
-        ).bind(title, genre, rating, duration, status, synopsis, poster, id).run();
+        return Response.json({ success: true, message: "Movie deleted successfully" }, { status: 200 });
 
-        if (info.success) {
-            return Response.json({ success: true, message: "Movie updated" }, { status: 200 });
-        } else {
-            return Response.json({ error: "Failed to update movie in database" }, { status: 400 });
-        }
     } catch (error) {
-        console.error("Database Error:", error);
-        return Response.json({ error: "Failed to update movie" }, { status: 500 });
+        console.error("DELETE Error:", error);
+        return Response.json({ error: "Failed to delete movie: " + error.message }, { status: 500 });
     }
 }
