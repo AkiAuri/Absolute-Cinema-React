@@ -217,6 +217,23 @@ function Booking() {
                           </div>
                         </div>
                     )}
+
+                    {/* Online Banking QR Code */}
+                    {paymentMethod === 'online-bank' && (
+                        <div className="mt-8 pt-6 border-t border-gray-600 animate-in fade-in slide-in-from-top-4 flex flex-col items-center text-center">
+                          <p className="text-white font-bold mb-4">Scan to Pay via Online Banking</p>
+                          <div className="bg-white p-4 rounded-xl shadow-lg mb-4 inline-block">
+                            {/* Generates a live dummy QR code containing the booking ID and amount */}
+                            <img
+                                src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=PAY-CINEBOOK-${totalPrice}`}
+                                alt="Payment QR Code"
+                                className="w-48 h-48"
+                            />
+                          </div>
+                          <p className="text-gray-400 text-sm mb-1">Amount Due: <span className="text-amber-500 font-bold">₱{totalPrice}</span></p>
+                          <p className="text-gray-500 text-xs">Scan with GCash, Maya, or your preferred banking app to proceed.</p>
+                        </div>
+                    )}
                   </div>
                 </>
             )}
