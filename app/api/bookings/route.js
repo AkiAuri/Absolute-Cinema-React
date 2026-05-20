@@ -54,3 +54,40 @@ export async function POST(request) {
         return Response.json({ error: "Failed to complete transaction: " + error.message }, { status: 500 });
     }
 }
+
+export async function GET() {
+    try {
+        const cookieStore = await cookies();
+        const token = cookieStore.get("auth_token")?.value;
+        if (!token) return Response.json({ error: "Unauthorized" }, { status: 401 });
+
+        const { payload } = await jwtVerify(token, JWT_SECRET);
+        if (payload.role === 'customer') return Response.json({ error: "Forbidden" }, { status: 403 });
+
+        const { env } = getCloudflareContext();
+
+        // Massive JOIN to format data exactly how the frontend table expects it
+        const { results } = await env.DB.prepare(`
+            SELECT 
+                b.id, 
+                b.totalPrice, 
+                b.paymentMethod, 
+                b.status, 
+                b.bookingDate,
+                u.name AS customerName,
+                m.title AS movieTitle,
+                s.start_time,
+                t.id AS theater
+            FROM bookings b
+            LEFT JOIN users u ON b.userId = u.id
+            JOIN showtimes s ON b.showtimeId = s.id
+            JOIN movies m ON s.movieId = m.id
+            JOIN theaters t ON s.theaterId = t.id
+            ORDER BY b.bookingDate DESC
+        `).all();
+
+        return Response.json(results, { status: 200 });
+    } catch (error) {
+        return Response.json({ error: "Failed to fetch bookings" }, { status: 500 });
+    }
+}
