@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from 'react';
-import AppRouter from '../../AppRouter'; // Ensure this import path is correct for your setup
+import AppRouter from '../AppRouter';// Ensure this import path is correct for your setup
 
 export default function CatchAllPage() {
     const [isMounted, setIsMounted] = useState(false);

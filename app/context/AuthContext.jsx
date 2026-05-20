@@ -1,3 +1,5 @@
+"use client"; // <-- Add this!
+
 import React, { createContext, useState, useEffect } from 'react';
 
 export const AuthContext = createContext();
