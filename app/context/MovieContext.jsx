@@ -53,9 +53,6 @@ export function MovieProvider({ children }) {
 
   const updateMovie = async (id, movieData) => {
     try {
-      // 1. Find the existing movie and merge the new data.
-      // This ensures that if a field (like 'poster') isn't included in the update form,
-      // we still send the existing poster URL to the database instead of null.
       const existingMovie = movies.find(m => m.id === id);
       const updatedPayload = { ...existingMovie, ...movieData };
 
