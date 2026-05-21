@@ -25,44 +25,46 @@ import SoldTickets from './pages/SoldTickets';
 import MovieRecords from './pages/MovieRecords';
 import Statistics from './pages/Statistics';
 import MovieStudio from './pages/MovieStudio';
+import ScheduleManager from './pages/ScheduleManager';
 
 function AppRouter() {
   return (
-    <BrowserRouter>
-      <AuthProvider>
-        <BookingProvider>
-          <MovieProvider>
-            <Routes>
-            {/* Auth routes - no navbar */}
-            <Route path="/login" element={<Login />} />
-            <Route path="/signup" element={<Signup />} />
-            <Route path="/forgot-password" element={<ForgotPassword />} />
+      <BrowserRouter>
+        <AuthProvider>
+          <BookingProvider>
+            <MovieProvider>
+              <Routes>
+                {/* Auth routes - no navbar */}
+                <Route path="/login" element={<Login />} />
+                <Route path="/signup" element={<Signup />} />
+                <Route path="/forgot-password" element={<ForgotPassword />} />
 
-            {/* Customer routes with navbar */}
-            <Route element={<Navbar />}>
-              <Route path="/" element={<Home />} />
-              <Route path="/schedule/:movieId" element={<ProtectedRoute><Schedule /></ProtectedRoute>} />
-              <Route path="/booking" element={<ProtectedRoute><Booking /></ProtectedRoute>} />
-              <Route path="/success" element={<ProtectedRoute><BookingSuccess /></ProtectedRoute>} />
-              <Route path="/account" element={<ProtectedRoute><Account /></ProtectedRoute>} />
+                {/* Customer routes with navbar */}
+                <Route element={<Navbar />}>
+                  <Route path="/" element={<Home />} />
+                  <Route path="/schedule/:movieId" element={<ProtectedRoute><Schedule /></ProtectedRoute>} />
+                  <Route path="/booking" element={<ProtectedRoute><Booking /></ProtectedRoute>} />
+                  <Route path="/success" element={<ProtectedRoute><BookingSuccess /></ProtectedRoute>} />
+                  <Route path="/account" element={<ProtectedRoute><Account /></ProtectedRoute>} />
 
-              {/* Dashboard routes */}
-              <Route path="/dashboard" element={<ProtectedRoute roles={['employee', 'admin']}><DashboardLayout /></ProtectedRoute>}>
-                <Route index element={<Dashboard />} />
-                <Route path="sold-tickets" element={<SoldTickets />} />
-                <Route path="movie-records" element={<MovieRecords />} />
-                <Route path="statistics" element={<Statistics />} />
-                <Route path="movie-studio" element={<ProtectedRoute roles={['admin']}><MovieStudio /></ProtectedRoute>} />
-              </Route>
-            </Route>
+                  {/* Dashboard routes */}
+                  <Route path="/dashboard" element={<ProtectedRoute roles={['employee', 'admin']}><DashboardLayout /></ProtectedRoute>}>
+                    <Route index element={<Dashboard />} />
+                    <Route path="sold-tickets" element={<SoldTickets />} />
+                    <Route path="movie-records" element={<MovieRecords />} />
+                    <Route path="statistics" element={<Statistics />} />
+                    <Route path="movie-studio" element={<ProtectedRoute roles={['admin']}><MovieStudio /></ProtectedRoute>} />
+                    <Route path="schedules" element={<ProtectedRoute roles={['admin']}><ScheduleManager /></ProtectedRoute>} />
+                  </Route>
+                </Route>
 
-            {/* Fallback */}
-            <Route path="*" element={<Navigate to="/" replace />} />
-            </Routes>
-          </MovieProvider>
-        </BookingProvider>
-      </AuthProvider>
-    </BrowserRouter>
+                {/* Fallback */}
+                <Route path="*" element={<Navigate to="/" replace />} />
+              </Routes>
+            </MovieProvider>
+          </BookingProvider>
+        </AuthProvider>
+      </BrowserRouter>
   );
 }
 
