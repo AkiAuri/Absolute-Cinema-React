@@ -90,8 +90,8 @@ export async function POST(request) {
             VALUES (?, ?, ?, ?)
         `).bind(
             parseInt(movieId, 10),
-            theaterId,
-            start_time, // Expects standard 'YYYY-MM-DD HH:MM:SS' string format
+            parseInt(theaterId, 10), // <--- THE FIX: Force the dropdown string into an Integer!
+            start_time,
             parseInt(pricePerSeat, 10)
         ).run();
 
