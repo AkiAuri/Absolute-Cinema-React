@@ -63,7 +63,7 @@ function ScheduleManager() {
 
             if (!res.ok) {
                 const errorData = await res.json();
-                throw new Error(errorData.error || "Failed to create showtime");
+                throw new Error(errorData.error || "Failed to create showtimes");
             }
 
             alert("Showtime scheduled successfully!");

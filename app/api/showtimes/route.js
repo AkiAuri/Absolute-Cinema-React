@@ -99,6 +99,6 @@ export async function POST(request) {
 
     } catch (error) {
         console.error("POST Showtime Error:", error);
-        return Response.json({ error: "Failed to schedule showtime: " + error.message }, { status: 500 });
+        return Response.json({ error: "Failed to schedule showtimes: " + error.message }, { status: 500 });
     }
 }

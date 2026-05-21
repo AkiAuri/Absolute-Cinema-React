@@ -62,7 +62,7 @@ export const MOCK_MOVIES = [
   },
 ];
 
-// Mock showtime data
+// Mock showtimes data
 export const MOCK_SHOWTIMES = [
   {
     id: 1,
