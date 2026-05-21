@@ -128,6 +128,7 @@ function Booking() {
                 <>
                   <h2 className="text-white text-2xl font-bold mb-6">Step 1: Select Seats</h2>
                   <SeatMap
+                      showtimeId={bookingData.selectedShowtime?.id}
                       theater={bookingData.selectedShowtime?.theater}
                       onSeatsChange={handleSeatsChange}
                       selectedSeats={selectedSeats}
