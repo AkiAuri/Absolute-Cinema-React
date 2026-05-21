@@ -89,10 +89,10 @@ export async function POST(request) {
             INSERT INTO showtimes (movieId, theaterId, start_time, pricePerSeat)
             VALUES (?, ?, ?, ?)
         `).bind(
-            parseInt(movieId, 10),
-            parseInt(theaterId, 10), // <--- THE FIX: Force the dropdown string into an Integer!
-            start_time,
-            parseInt(pricePerSeat, 10)
+            parseInt(movieId, 10),     // Movie ID is an INTEGER in schema
+            String(theaterId),         // <--- FIX: Ensure Theater ID remains TEXT to match schema!
+            start_time,                // Start time is DATETIME (String)
+            parseInt(pricePerSeat, 10) // Price is an INTEGER in schema
         ).run();
 
         return Response.json({ success: true, message: "Showtime scheduled successfully" }, { status: 201 });
