@@ -50,3 +50,11 @@ CREATE TABLE booking_seats (
                                PRIMARY KEY (bookingId, seatId),
                                FOREIGN KEY (bookingId) REFERENCES bookings(id)
 )
+
+CREATE TABLE locked_seats (
+                              showtimeId INTEGER,
+                              seatId TEXT,
+                              locked_until DATETIME,
+                              userId INTEGER,
+                              PRIMARY KEY (showtimeId, seatId)
+);
