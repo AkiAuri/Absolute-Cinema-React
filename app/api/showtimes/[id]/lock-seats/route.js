@@ -1,14 +1,23 @@
 import { NextResponse } from 'next/server';
+import { getCloudflareContext } from "@opennextjs/cloudflare";
 
 export async function POST(request, { params }) {
     try {
+        // 1. Get the Cloudflare context and D1 Database binding
+        const { env } = getCloudflareContext();
+        const db = env.DB;
+
+        if (!db) {
+            return NextResponse.json({ error: "Database binding not found." }, { status: 500 });
+        }
+
         const showtimeId = params.id;
         const { seats, userId } = await request.json();
 
-        // 1. Clean up expired locks first (e.g., locks older than current time)
+        // 2. Clean up expired locks first (e.g., locks older than current time)
         await db.prepare(`DELETE FROM locked_seats WHERE locked_until <= CURRENT_TIMESTAMP`).run();
 
-        // 2. Check if any of the requested seats are already booked OR currently locked
+        // 3. Check if any of the requested seats are already booked OR currently locked
         for (const seat of seats) {
             // Check permanent bookings
             const isBooked = await db.prepare(`
@@ -28,7 +37,7 @@ export async function POST(request, { params }) {
             }
         }
 
-        // 3. Lock the seats for 10 minutes
+        // 4. Lock the seats for 10 minutes
         // (SQLite CURRENT_TIMESTAMP is UTC, adding 10 minutes in SQLite logic)
         const insertQuery = `
             INSERT INTO locked_seats (showtimeId, seatId, locked_until, userId)
