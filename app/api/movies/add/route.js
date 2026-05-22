@@ -20,9 +20,14 @@ export async function POST(request) {
         }
 
         // 2. Fetch real movie data from TMDB
+// Update this section in app/api/movies/add/route.js
         const tmdbResponse = await fetch(`https://api.themoviedb.org/3/movie/${tmdbId}?api_key=${TMDB_API_KEY}`);
+
         if (!tmdbResponse.ok) {
-            throw new Error("Movie not found on TMDB. Check the ID.");
+            // Read the exact error message from TMDB
+            const errorData = await tmdbResponse.json();
+            console.error("TMDB API Error Response:", errorData);
+            throw new Error(`TMDB Error: ${errorData.status_message || 'Check the ID or API Key.'}`);
         }
         const movieData = await tmdbResponse.json();
 
