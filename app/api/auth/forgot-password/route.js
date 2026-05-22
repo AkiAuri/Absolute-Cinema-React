@@ -1,9 +1,11 @@
 import { NextResponse } from 'next/server';
-// You might need to import a crypto library if not in a Node edge environment
-// In Cloudflare Pages, crypto is globally available.
+import { getCloudflareContext } from "@opennextjs/cloudflare";
 
 export async function POST(request) {
     try {
+        const { env } = getCloudflareContext();
+        const db = env.DB;
+
         const { email } = await request.json();
 
         // 1. Generate a secure random token

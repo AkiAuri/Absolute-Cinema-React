@@ -1,8 +1,12 @@
 import { NextResponse } from 'next/server';
+import { getCloudflareContext } from "@opennextjs/cloudflare";
 
 export async function POST(request, { params }) {
     try {
         const { id } = params; // This ID comes from scanning the QR code
+
+        const { env } = getCloudflareContext();
+        const db = env.DB;
 
         // 1. Check if the booking exists and is 'confirmed'
         const checkQuery = `SELECT status FROM bookings WHERE id = ?`;

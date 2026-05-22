@@ -1,8 +1,12 @@
 import { NextResponse } from 'next/server';
-import bcrypt from 'bcryptjs'; // Or whichever hashing library you are using for signup/login
+import bcrypt from 'bcryptjs';
+import { getCloudflareContext } from "@opennextjs/cloudflare";
 
 export async function POST(request) {
     try {
+        const { env } = getCloudflareContext();
+        const db = env.DB;
+
         const { token, newPassword } = await request.json();
 
         // 1. Find user with this token and ensure it hasn't expired

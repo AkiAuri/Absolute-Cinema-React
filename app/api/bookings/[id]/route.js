@@ -1,11 +1,12 @@
 import { NextResponse } from 'next/server';
+import { getCloudflareContext } from "@opennextjs/cloudflare";
 
 export async function GET(request, { params }) {
     try {
         const { id } = params;
 
-        // Replace this with your actual database instance logic
-        // e.g., const db = getRequestContext().env.DB;
+        const { env } = getCloudflareContext();
+        const db = env.DB;
 
         // Fetch the booking, joined with showtime and user info
         const query = `
