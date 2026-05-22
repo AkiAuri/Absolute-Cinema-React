@@ -23,6 +23,23 @@ function SoldTickets() {
     fetchTickets();
   }, []);
 
+  // NEW: Verify ticket function for staff
+  const handleVerifyTicket = async (id) => {
+    try {
+      const res = await fetch(`/api/bookings/${id}/verify`, { method: 'POST' });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error);
+      }
+
+      // Update UI to show ticket is used
+      setTickets(tickets.map(t => t.id === id ? { ...t, status: 'used' } : t));
+      alert("Ticket verified successfully! Customer can proceed.");
+    } catch (error) {
+      alert("Verification failed: " + error.message);
+    }
+  };
+
   const filteredTickets = tickets.filter(t =>
       t.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
       (t.customerName && t.customerName.toLowerCase().includes(searchQuery.toLowerCase()))
@@ -55,9 +72,10 @@ function SoldTickets() {
                 <th className="py-3 px-4 font-medium">Customer</th>
                 <th className="py-3 px-4 font-medium">Movie</th>
                 <th className="py-3 px-4 font-medium">Date Sold</th>
-                <th className="py-3 px-4 font-medium">Payment</th>
                 <th className="py-3 px-4 font-medium">Total</th>
                 <th className="py-3 px-4 font-medium">Status</th>
+                {/* NEW: Actions Column */}
+                <th className="py-3 px-4 font-medium">Actions</th>
               </tr>
               </thead>
               <tbody>
@@ -72,12 +90,28 @@ function SoldTickets() {
                         <td className="py-3 px-4 font-medium text-white">{ticket.customerName || 'Walk-in'}</td>
                         <td className="py-3 px-4">{ticket.movieTitle}</td>
                         <td className="py-3 px-4 text-sm">{new Date(ticket.bookingDate).toLocaleDateString()}</td>
-                        <td className="py-3 px-4 capitalize">{ticket.paymentMethod.replace('-', ' ')}</td>
                         <td className="py-3 px-4 font-bold text-white">₱{ticket.totalPrice}</td>
                         <td className="py-3 px-4">
-                      <span className={`px-2 py-1 rounded-full text-xs font-bold ${ticket.status === 'confirmed' ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>
-                        {ticket.status.toUpperCase()}
-                      </span>
+                          <span className={`px-2 py-1 rounded-full text-xs font-bold ${
+                              ticket.status === 'confirmed' ? 'bg-green-500/20 text-green-400' :
+                                  ticket.status === 'used' ? 'bg-blue-500/20 text-blue-400' :
+                                      'bg-red-500/20 text-red-400'
+                          }`}>
+                            {ticket.status.toUpperCase()}
+                          </span>
+                        </td>
+                        {/* NEW: Verify Button */}
+                        <td className="py-3 px-4">
+                          {ticket.status === 'confirmed' ? (
+                              <button
+                                  onClick={() => handleVerifyTicket(ticket.id)}
+                                  className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-xs font-bold transition"
+                              >
+                                Verify Entry
+                              </button>
+                          ) : (
+                              <span className="text-gray-500 text-xs italic">N/A</span>
+                          )}
                         </td>
                       </tr>
                   ))

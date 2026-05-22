@@ -8,30 +8,47 @@ function Account() {
   const [filter, setFilter] = useState('all');
 
   useEffect(() => {
-    // Get tickets from localStorage (both old bookings and new soldTickets)
-    const storedTickets = JSON.parse(localStorage.getItem('soldTickets') || '[]');
-    const legacyBookings = JSON.parse(localStorage.getItem('bookings') || '[]');
-    
-    // Combine and filter for current user (customer purchases)
-    const allTickets = [...storedTickets, ...legacyBookings];
-    const userTickets = allTickets.filter((t) => t.customerId === user.id || t.userId === user.id);
-    setTickets(userTickets);
+    const fetchMyTickets = async () => {
+      if (!user) return;
+      try {
+        // Fetch tickets from the database
+        const response = await fetch('/api/bookings');
+        if (response.ok) {
+          const allTickets = await response.json();
+          // Filter tickets belonging to the logged-in user
+          const userTickets = allTickets.filter((t) => t.userId === user.id);
+          setTickets(userTickets);
+        }
+      } catch (error) {
+        console.error("Error fetching tickets:", error);
+      }
+    };
+
+    fetchMyTickets();
   }, [user]);
 
   const filteredTickets = filter === 'all' ? tickets : tickets.filter((t) => t.status === filter);
 
-  const handleCancelTicket = (ticketId) => {
-    const updatedTickets = tickets.map((t) =>
-      t.id === ticketId ? { ...t, status: 'cancelled' } : t
-    );
-    setTickets(updatedTickets);
-    
-    // Update in localStorage
-    const storedTickets = JSON.parse(localStorage.getItem('soldTickets') || '[]');
-    const updatedStored = storedTickets.map((t) =>
-      t.id === ticketId ? { ...t, status: 'cancelled' } : t
-    );
-    localStorage.setItem('soldTickets', JSON.stringify(updatedStored));
+  const handleCancelTicket = async (ticketId) => {
+    try {
+      // Assuming you create a PUT or POST route to cancel a booking
+      // e.g., POST /api/bookings/[id]/refund
+      const response = await fetch(`/api/bookings/${ticketId}/refund`, {
+        method: 'POST',
+      });
+
+      if (!response.ok) throw new Error('Failed to cancel ticket');
+
+      // Update the UI
+      setTickets((prev) =>
+          prev.map((t) => (t.id === ticketId ? { ...t, status: 'cancelled' } : t))
+      );
+
+      alert("Ticket cancelled successfully.");
+    } catch (error) {
+      console.error("Error cancelling ticket:", error);
+      alert(error.message);
+    }
   };
 
   return (
