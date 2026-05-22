@@ -34,7 +34,6 @@
 			"database_id": "3378bf09-92c7-4e4d-a3ab-4b2adc427194"
 		}
 	],
-	"vars": {},
 	"triggers": {
 		"crons": [
 			"*/5 * * * *"
