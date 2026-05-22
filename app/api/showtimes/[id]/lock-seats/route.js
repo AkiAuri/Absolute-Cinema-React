@@ -11,8 +11,14 @@ export async function POST(request, { params }) {
             return NextResponse.json({ error: "Database binding not found." }, { status: 500 });
         }
 
-        const showtimeId = params.id;
+        // FIX 1: Await the params object (Next.js 15 requirement)
+        const resolvedParams = await params;
+        const showtimeId = resolvedParams.id;
+
         const { seats, userId } = await request.json();
+
+        // FIX 2: Ensure userId is `null` instead of `undefined` if not provided
+        const safeUserId = userId === undefined ? null : userId;
 
         // 2. Clean up expired locks first (e.g., locks older than current time)
         await db.prepare(`DELETE FROM locked_seats WHERE locked_until <= CURRENT_TIMESTAMP`).run();
@@ -22,7 +28,7 @@ export async function POST(request, { params }) {
             // Check permanent bookings
             const isBooked = await db.prepare(`
                 SELECT 1 FROM booking_seats bs
-                                  JOIN bookings b ON bs.bookingId = b.id
+                JOIN bookings b ON bs.bookingId = b.id
                 WHERE b.showtimeId = ? AND bs.seatId = ? AND b.status = 'confirmed'
             `).bind(showtimeId, seat).first();
 
@@ -38,14 +44,14 @@ export async function POST(request, { params }) {
         }
 
         // 4. Lock the seats for 10 minutes
-        // (SQLite CURRENT_TIMESTAMP is UTC, adding 10 minutes in SQLite logic)
         const insertQuery = `
             INSERT INTO locked_seats (showtimeId, seatId, locked_until, userId)
             VALUES (?, ?, datetime(CURRENT_TIMESTAMP, '+10 minutes'), ?)
         `;
 
         for (const seat of seats) {
-            await db.prepare(insertQuery).bind(showtimeId, seat, userId).run();
+            // Use safeUserId here so D1 doesn't crash on undefined
+            await db.prepare(insertQuery).bind(showtimeId, seat, safeUserId).run();
         }
 
         return NextResponse.json({ message: 'Seats locked successfully for 10 minutes' }, { status: 200 });
