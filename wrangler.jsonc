@@ -33,5 +33,15 @@
 			"database_name": "absolute-cinema-db",
 			"database_id": "3378bf09-92c7-4e4d-a3ab-4b2adc427194"
 		}
-	]
+	],
+	"vars": {
+		"JWT_SECRET": "CHANGE_THIS_TO_A_LONG_RANDOM_STRING",
+		"CRON_SECRET": "super_secret_cron_key_123",
+		"TMDB_API_KEY": "YOUR_TMDB_API_KEY_HERE"
+	},
+	"triggers": {
+		"crons": [
+			"*/5 * * * *"
+		]
+	}
 }
