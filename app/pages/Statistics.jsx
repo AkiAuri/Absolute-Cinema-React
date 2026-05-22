@@ -22,22 +22,26 @@ function Statistics() {
   useEffect(() => {
     const fetchMovieStats = async () => {
       try {
-        // We fetch the live bookings data and group them by movie to build the charts
         const response = await fetch('/api/bookings');
         if (!response.ok) throw new Error("Failed to fetch ticket data.");
         const tickets = await response.json();
 
         // Tally up tickets per movie
         const movieTally = tickets.reduce((acc, ticket) => {
-          if (ticket.status === 'confirmed') {
+          // FIX 1: Include both 'confirmed' and 'used' tickets so you don't lose past revenue
+          if (ticket.status === 'confirmed' || ticket.status === 'used') {
             const title = ticket.movieTitle;
             if (!acc[title]) acc[title] = { name: title, tickets: 0, revenue: 0 };
 
-            // Note: In our current schema, one booking record equals one checkout transaction,
-            // but a checkout can have multiple seats. To be perfectly accurate on tickets sold per movie,
-            // you'd typically join on booking_seats. For this overview chart, we approximate revenue.
             acc[title].revenue += ticket.totalPrice;
-            acc[title].tickets += Math.floor(ticket.totalPrice / 12); // rough estimate if seats aren't returned explicitly
+
+            // FIX 2: Count the exact number of seats instead of estimating with division
+            if (ticket.seats && Array.isArray(ticket.seats)) {
+              acc[title].tickets += ticket.seats.length;
+            } else {
+              // Fallback just in case an old test record is missing the seats array
+              acc[title].tickets += 1;
+            }
           }
           return acc;
         }, {});
