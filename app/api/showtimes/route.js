@@ -25,6 +25,15 @@ async function verifyAdmin() {
 // 1. GET /api/showtimes (Public) - Combines data from showtimes, movies, and theaters
 export async function GET(request) {
     try {
+        // --- ADD THESE TWO LINES TO FIX THE ERROR ---
+        const { env } = getCloudflareContext();
+        const db = env.DB;
+
+        if (!db) {
+            return NextResponse.json({ error: "Database binding not found." }, { status: 500 });
+        }
+        // --------------------------------------------
+
         const { searchParams } = new URL(request.url);
         const movieId = searchParams.get('movieId');
         const date = searchParams.get('date');
@@ -53,6 +62,7 @@ export async function GET(request) {
         // Sort by time so early showings appear first
         query += ` ORDER BY s.start_time ASC`;
 
+        // Execute query
         const result = await db.prepare(query).bind(...params).all();
 
         return NextResponse.json(result.results || result);
