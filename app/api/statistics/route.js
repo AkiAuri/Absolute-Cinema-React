@@ -18,17 +18,19 @@ export async function GET() {
         const { env } = getCloudflareContext();
         const db = env.DB;
 
-        // Run 3 optimized queries concurrently for the Dashboard Stats
-        const [revenueRes, ticketsRes, moviesRes] = await db.batch([
+        // Run 4 optimized queries concurrently for the Dashboard Stats
+        const [revenueRes, ticketsRes, moviesRes, usersRes] = await db.batch([
             db.prepare("SELECT COALESCE(SUM(totalPrice), 0) as total FROM bookings WHERE status = 'confirmed'"),
             db.prepare("SELECT COUNT(*) as total FROM booking_seats"),
-            db.prepare("SELECT COUNT(*) as total FROM movies WHERE status = 'now-showing'")
+            db.prepare("SELECT COUNT(*) as total FROM movies WHERE status = 'now-showing'"),
+            db.prepare("SELECT COUNT(*) as total FROM users") // <-- NEW QUERY ADDED HERE
         ]);
 
         return Response.json({
             totalRevenue: revenueRes.results[0].total,
             ticketsSold: ticketsRes.results[0].total,
-            activeMovies: moviesRes.results[0].total
+            activeMovies: moviesRes.results[0].total,
+            totalUsers: usersRes.results[0].total // <-- SEND TO FRONTEND
         }, { status: 200 });
 
     } catch (error) {

@@ -3,7 +3,8 @@ import { Ticket, Video, Users, DollarSign } from 'lucide-react';
 import StatCard from '../components/StatCard';
 
 function Dashboard() {
-  const [stats, setStats] = useState({ totalRevenue: 0, ticketsSold: 0, activeMovies: 0 });
+  // 1. Add totalUsers to the initial state
+  const [stats, setStats] = useState({ totalRevenue: 0, ticketsSold: 0, activeMovies: 0, totalUsers: 0 });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -34,8 +35,7 @@ function Dashboard() {
           <StatCard title="Total Revenue" value={`₱${stats.totalRevenue.toLocaleString()}`} icon={DollarSign} trend="+12.5%" />
           <StatCard title="Tickets Sold" value={loading ? "..." : stats.ticketsSold} icon={Ticket} trend="+8.2%" />
           <StatCard title="Active Movies" value={loading ? "..." : stats.activeMovies} icon={Video} />
-          {/* Placeholder for future user tracking logic */}
-          <StatCard title="Total Users" value="1,240" icon={Users} trend="+15.3%" />
+          <StatCard title="Total Users" value={loading ? "..." : stats.totalUsers.toLocaleString()} icon={Users} trend="+15.3%" />
         </div>
       </div>
   );
