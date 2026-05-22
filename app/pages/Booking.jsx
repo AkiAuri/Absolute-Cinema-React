@@ -169,18 +169,140 @@ function Booking() {
                 </>
             )}
 
-            {/* ... Rest of your UI steps (Step 2, Step 3) remain exactly identical to what you wrote! ... */}
             {step === 2 && (
                 <>
                   <h2 className="text-white text-2xl font-bold mb-6">Step 2: {isStaff ? 'Customer Info & Payment' : 'Payment Options'}</h2>
-                  {/* Your existing Step 2 UI here */}
+                  <div className="bg-gray-700 rounded-lg p-6 dark:bg-gray-800 border border-gray-600">
+
+                    {/* Customer name input for staff sales */}
+                    {isStaff && (
+                        <div className="mb-8 border-b border-gray-600 pb-6">
+                          <label className="block text-gray-300 text-sm font-medium mb-2">Customer Name</label>
+                          <input
+                              type="text"
+                              value={customerName}
+                              onChange={(e) => setCustomerName(e.target.value)}
+                              placeholder="Enter customer name"
+                              className="w-full bg-gray-600 text-white px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-600"
+                              required
+                          />
+                        </div>
+                    )}
+
+                    {/* New Payment Selector */}
+                    <div className="mb-6">
+                      <label className="block text-gray-300 text-sm font-medium mb-3">Select Payment Method</label>
+                      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                        <button
+                            type="button"
+                            onClick={() => setPaymentMethod('card')}
+                            className={`p-4 rounded-lg border font-bold text-center transition ${paymentMethod === 'card' ? 'bg-amber-600 border-amber-600 text-white' : 'bg-gray-800 border-gray-600 text-gray-400 hover:text-white'}`}
+                        >
+                          💳 Credit Card
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => setPaymentMethod('online-bank')}
+                            className={`p-4 rounded-lg border font-bold text-center transition ${paymentMethod === 'online-bank' ? 'bg-amber-600 border-amber-600 text-white' : 'bg-gray-800 border-gray-600 text-gray-400 hover:text-white'}`}
+                        >
+                          🏦 Online Banking
+                        </button>
+                        {isStaff && (
+                            <button
+                                type="button"
+                                onClick={() => setPaymentMethod('cash')}
+                                className={`p-4 rounded-lg border font-bold text-center transition ${paymentMethod === 'cash' ? 'bg-amber-600 border-amber-600 text-white' : 'bg-gray-800 border-gray-600 text-gray-400 hover:text-white'}`}
+                            >
+                              💵 Cash (Counter)
+                            </button>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Dummy Card Input - Only show if 'card' is selected */}
+                    {paymentMethod === 'card' && (
+                        <div className="mt-8 pt-6 border-t border-gray-600 animate-in fade-in slide-in-from-top-4">
+                          <div className="mb-4">
+                            <label className="block text-gray-300 text-sm font-medium mb-2">Card Number</label>
+                            <input
+                                type="text"
+                                placeholder="1234 5678 9012 3456"
+                                className="w-full bg-gray-600 text-white px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-600"
+                            />
+                          </div>
+                          <div className="grid grid-cols-2 gap-4">
+                            <div>
+                              <label className="block text-gray-300 text-sm font-medium mb-2">Expiry</label>
+                              <input
+                                  type="text"
+                                  placeholder="MM/YY"
+                                  className="w-full bg-gray-600 text-white px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-600"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-gray-300 text-sm font-medium mb-2">CVV</label>
+                              <input
+                                  type="text"
+                                  placeholder="123"
+                                  className="w-full bg-gray-600 text-white px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-600"
+                              />
+                            </div>
+                          </div>
+                        </div>
+                    )}
+
+                    {/* Online Banking QR Code */}
+                    {paymentMethod === 'online-bank' && (
+                        <div className="mt-8 pt-6 border-t border-gray-600 animate-in fade-in slide-in-from-top-4 flex flex-col items-center text-center">
+                          <p className="text-white font-bold mb-4">Scan to Pay via Online Banking</p>
+                          <div className="bg-white p-4 rounded-xl shadow-lg mb-4 inline-block">
+                            <img
+                                src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=PAY-CINEBOOK-${totalPrice}`}
+                                alt="Payment QR Code"
+                                className="w-48 h-48"
+                            />
+                          </div>
+                          <p className="text-gray-400 text-sm mb-1">Amount Due: <span className="text-amber-500 font-bold">₱{totalPrice}</span></p>
+                          <p className="text-gray-500 text-xs">Scan with GCash, Maya, or your preferred banking app to proceed.</p>
+                        </div>
+                    )}
+                  </div>
                 </>
             )}
 
             {step === 3 && (
                 <>
                   <h2 className="text-white text-2xl font-bold mb-6">Step 3: Confirmation</h2>
-                  {/* Your existing Step 3 UI here */}
+                  <div className="space-y-4">
+                    <div className="bg-gray-700 rounded-lg p-4 dark:bg-gray-800 border border-gray-600">
+                      <p className="text-gray-400 text-sm">Movie</p>
+                      <p className="text-white font-bold text-lg">{bookingData.selectedMovie.title}</p>
+                    </div>
+                    <div className="grid grid-cols-3 gap-4">
+                      <div className="bg-gray-700 rounded-lg p-4 dark:bg-gray-800 border border-gray-600">
+                        <p className="text-gray-400 text-sm">Date</p>
+                        <p className="text-white font-bold">{bookingData.selectedDate}</p>
+                      </div>
+                      <div className="bg-gray-700 rounded-lg p-4 dark:bg-gray-800 border border-gray-600">
+                        <p className="text-gray-400 text-sm">Time</p>
+                        <p className="text-white font-bold">{bookingData.selectedTime}</p>
+                      </div>
+                      <div className="bg-gray-700 rounded-lg p-4 dark:bg-gray-800 border border-gray-600">
+                        <p className="text-gray-400 text-sm">Theater</p>
+                        <p className="text-white font-bold">{bookingData.selectedShowtime.theater}</p>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="bg-gray-700 rounded-lg p-4 dark:bg-gray-800 border border-gray-600">
+                        <p className="text-gray-400 text-sm">Seats</p>
+                        <p className="text-white font-bold text-lg">{selectedSeats.join(', ')}</p>
+                      </div>
+                      <div className="bg-gray-700 rounded-lg p-4 dark:bg-gray-800 border border-gray-600">
+                        <p className="text-gray-400 text-sm">Payment Method</p>
+                        <p className="text-white font-bold text-lg capitalize">{paymentMethod.replace('-', ' ')}</p>
+                      </div>
+                    </div>
+                  </div>
                 </>
             )}
 

@@ -66,27 +66,37 @@ export async function GET() {
 
         const { env } = getCloudflareContext();
 
-        // Massive JOIN to format data exactly how the frontend table expects it
+        // Massive JOIN updated to include the seats!
         const { results } = await env.DB.prepare(`
-            SELECT 
-                b.id, 
-                b.totalPrice, 
-                b.paymentMethod, 
-                b.status, 
+            SELECT
+                b.id,
+                b.totalPrice,
+                b.paymentMethod,
+                b.status,
                 b.bookingDate,
                 u.name AS customerName,
                 m.title AS movieTitle,
                 s.start_time,
-                t.id AS theater
+                t.id AS theater,
+                GROUP_CONCAT(bs.seatId) as seats
             FROM bookings b
-            LEFT JOIN users u ON b.userId = u.id
-            JOIN showtimes s ON b.showtimeId = s.id
-            JOIN movies m ON s.movieId = m.id
-            JOIN theaters t ON s.theaterId = t.id
+                     LEFT JOIN users u ON b.userId = u.id
+                     JOIN showtimes s ON b.showtimeId = s.id
+                     JOIN movies m ON s.movieId = m.id
+                     JOIN theaters t ON s.theaterId = t.id
+                     LEFT JOIN booking_seats bs ON bs.bookingId = b.id
+            GROUP BY b.id
             ORDER BY b.bookingDate DESC
         `).all();
 
-        return Response.json(results, { status: 200 });
+        // Safety check: ensure 'seats' is always at least an empty string
+        // so .split(',') never crashes the frontend again, even if a booking has 0 seats.
+        const safeResults = results.map(row => ({
+            ...row,
+            seats: row.seats || ""
+        }));
+
+        return Response.json(safeResults, { status: 200 });
     } catch (error) {
         return Response.json({ error: "Failed to fetch bookings" }, { status: 500 });
     }
