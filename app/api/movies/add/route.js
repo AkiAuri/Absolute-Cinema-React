@@ -20,7 +20,7 @@ export async function POST(request) {
         }
 
         // 2. Fetch real movie data from TMDB
-// Update this section in app/api/movies/add/route.js
+        // Update this section in app/api/movies/add/route.js
         const tmdbResponse = await fetch(`https://api.themoviedb.org/3/movie/${tmdbId}?api_key=${TMDB_API_KEY}`);
 
         if (!tmdbResponse.ok) {
