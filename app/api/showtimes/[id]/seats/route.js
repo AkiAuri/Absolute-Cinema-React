@@ -1,10 +1,21 @@
 import { NextResponse } from 'next/server';
+import { getCloudflareContext } from "@opennextjs/cloudflare";
 
 export async function GET(request, { params }) {
     try {
-        const showtimeId = params.id;
+        // 1. Await the dynamic params (Next.js 15+)
+        const resolvedParams = await params;
+        const showtimeId = resolvedParams.id;
 
-        // 1. Get the booked and locked seats
+        // 2. Connect to Cloudflare DB
+        const { env } = getCloudflareContext();
+        const db = env.DB;
+
+        if (!db) {
+            return NextResponse.json({ error: "Database binding not found." }, { status: 500 });
+        }
+
+        // 3. Get the booked and locked seats
         const bookedQuery = `
       SELECT bs.seatId FROM booking_seats bs 
       JOIN bookings b ON bs.bookingId = b.id 
@@ -16,7 +27,7 @@ export async function GET(request, { params }) {
         const bookedResult = await db.prepare(bookedQuery).bind(showtimeId, showtimeId).all();
         const bookedSeats = bookedResult.results.map(row => row.seatId);
 
-        // 2. Get the theater layout for this showtime
+        // 4. Get the theater layout for this showtime
         const layoutQuery = `
             SELECT t.rows, t.cols, t.layoutConfig
             FROM showtimes s
@@ -25,14 +36,14 @@ export async function GET(request, { params }) {
         `;
         const layoutResult = await db.prepare(layoutQuery).bind(showtimeId).first();
 
-        // Parse the JSON string from the database (fallback to empty object if null)
-        const config = layoutResult.layoutConfig ? JSON.parse(layoutResult.layoutConfig) : {};
+        // Safety check in case layoutResult is undefined
+        const config = layoutResult?.layoutConfig ? JSON.parse(layoutResult.layoutConfig) : {};
 
         return NextResponse.json({
             bookedSeats,
             layout: {
-                rows: layoutResult.rows || 10,
-                cols: layoutResult.cols || 12,
+                rows: layoutResult?.rows || 10,
+                cols: layoutResult?.cols || 12,
                 config
             }
         });

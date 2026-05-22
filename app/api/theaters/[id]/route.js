@@ -1,9 +1,14 @@
 import { NextResponse } from 'next/server';
+import { getCloudflareContext } from "@opennextjs/cloudflare";
 
 export async function PUT(request, { params }) {
     try {
-        const oldId = params.id;
+        const resolvedParams = await params;
+        const oldId = resolvedParams.id;
         const { id: newId, capacity } = await request.json();
+
+        const { env } = getCloudflareContext();
+        const db = env.DB;
 
         const query = `UPDATE theaters SET id = ?, capacity = ? WHERE id = ?`;
         await db.prepare(query).bind(newId, capacity, oldId).run();
@@ -16,7 +21,11 @@ export async function PUT(request, { params }) {
 
 export async function DELETE(request, { params }) {
     try {
-        const { id } = params;
+        const resolvedParams = await params;
+        const id = resolvedParams.id;
+
+        const { env } = getCloudflareContext();
+        const db = env.DB;
 
         // Prevent deleting a theater that has scheduled showtimes
         const check = await db.prepare(`SELECT count(*) as count FROM showtimes WHERE theaterId = ?`).bind(id).first();
