@@ -1,6 +1,7 @@
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { jwtVerify } from "jose";
 import { cookies } from "next/headers";
+import { NextResponse } from 'next/server';
 
 // Disable edge caching to ensure live schedule changes reflect instantly
 export const dynamic = 'force-dynamic';
@@ -25,47 +26,38 @@ async function verifyAdmin() {
 export async function GET(request) {
     try {
         const { searchParams } = new URL(request.url);
-        const movieId = searchParams.get("movieId");
+        const movieId = searchParams.get('movieId');
+        const date = searchParams.get('date');
 
-        const { env } = getCloudflareContext();
-        const db = env.DB;
-
-        if (!db) {
-            return Response.json({ error: "Database binding not found." }, { status: 500 });
-        }
-
-        // Using SQL JOINs to gather all necessary data in a single optimized query
+        // Base query: join movies to get the title for the frontend
         let query = `
-            SELECT 
-                s.id, 
-                s.movieId, 
-                s.theaterId, 
-                s.start_time, 
-                s.pricePerSeat,
-                m.title AS movieTitle,
-                m.poster AS moviePoster,
-                t.capacity AS theaterCapacity
-            FROM showtimes s
-            JOIN movies m ON s.movieId = m.id
-            JOIN theaters t ON s.theaterId = t.id
-        `;
+      SELECT s.*, m.title as movieTitle 
+      FROM showtimes s
+      JOIN movies m ON s.movieId = m.id
+      WHERE 1=1
+    `;
+        let params = [];
 
-        let stmt;
+        // Filter by specific Movie ID
         if (movieId) {
-            // Filter by specific movie when requested on the schedule page
-            query += " WHERE s.movieId = ? ORDER BY s.start_time ASC";
-            stmt = db.prepare(query).bind(parseInt(movieId, 10));
-        } else {
-            query += " ORDER BY s.start_time ASC";
-            stmt = db.prepare(query);
+            query += ` AND s.movieId = ?`;
+            params.push(movieId);
         }
 
-        const { results } = await stmt.all();
-        return Response.json(results, { status: 200 });
+        // Filter by specific Date (Extracts the YYYY-MM-DD part from the SQL DATETIME string)
+        if (date) {
+            query += ` AND date(s.start_time) = ?`;
+            params.push(date);
+        }
 
+        // Sort by time so early showings appear first
+        query += ` ORDER BY s.start_time ASC`;
+
+        const result = await db.prepare(query).bind(...params).all();
+
+        return NextResponse.json(result.results || result);
     } catch (error) {
-        console.error("GET Showtimes Error:", error);
-        return Response.json({ error: "Failed to fetch showtimes: " + error.message }, { status: 500 });
+        return NextResponse.json({ error: error.message }, { status: 500 });
     }
 }
 

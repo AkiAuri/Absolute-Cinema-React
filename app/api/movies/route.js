@@ -1,22 +1,29 @@
-import { getCloudflareContext } from "@opennextjs/cloudflare";
+import { NextResponse } from 'next/server';
 
-// Add this line at the top to stop Cloudflare Pages from caching the API response!
-export const dynamic = 'force-dynamic';
-
-export async function GET() {
+export async function GET(request) {
     try {
-        const { env } = getCloudflareContext();
-        const db = env.DB;
+        // Extract query parameters from the URL
+        const { searchParams } = new URL(request.url);
+        const status = searchParams.get('status');
 
-        if (!db) {
-            return Response.json({ error: "Database binding not found." }, { status: 500 });
+        let query = `SELECT * FROM movies`;
+        let params = [];
+
+        // If a status was provided in the URL (e.g., ?status=now-showing)
+        if (status) {
+            query += ` WHERE status = ?`;
+            params.push(status);
         }
 
-        const { results } = await db.prepare("SELECT * FROM movies").all();
+        query += ` ORDER BY id DESC`;
 
-        return Response.json(results, { status: 200 });
+        // Execute the query (Adjust `db.prepare` to match your Cloudflare D1 setup)
+        const result = await db.prepare(query).bind(...params).all();
+
+        return NextResponse.json(result.results || result);
     } catch (error) {
-        console.error("Database Error:", error);
-        return Response.json({ error: "Failed to fetch movies" }, { status: 500 });
+        return NextResponse.json({ error: error.message }, { status: 500 });
     }
 }
+
+// ... Keep your existing POST function for adding movies below this

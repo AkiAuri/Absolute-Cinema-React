@@ -3,86 +3,73 @@ import { Link } from 'react-router-dom';
 
 function ForgotPassword() {
   const [email, setEmail] = useState('');
-  const [submitted, setSubmitted] = useState(false);
+  const [message, setMessage] = useState('');
+  const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
+    setMessage('');
+    setError('');
 
-    // Simulate API delay
-    setTimeout(() => {
-      setSubmitted(true);
+    try {
+      const res = await fetch('/api/auth/forgot-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email })
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) throw new Error(data.error);
+
+      // Tell user to check their email
+      setMessage(data.message);
+
+    } catch (err) {
+      setError(err.message);
+    } finally {
       setIsLoading(false);
-    }, 500);
+    }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 flex items-center justify-center px-4">
-      <div className="w-full max-w-md">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <div className="w-16 h-16 bg-amber-600 rounded-lg flex items-center justify-center mx-auto mb-4">
-            <span className="text-white text-3xl">🎬</span>
-          </div>
-          <h1 className="text-white text-3xl font-bold mb-2">CineBook</h1>
-          <p className="text-gray-400">Reset your password</p>
-        </div>
+      <div className="min-h-screen bg-gray-900 flex items-center justify-center p-4">
+        <div className="bg-gray-800 p-8 rounded-lg shadow-xl w-full max-w-md border border-gray-700">
+          <h2 className="text-2xl font-bold text-white mb-2">Reset Password</h2>
+          <p className="text-gray-400 mb-6">Enter your email and we'll send you a link to reset your password.</p>
 
-        {/* Content */}
-        <div className="bg-gray-800 rounded-lg p-8 dark:bg-gray-900">
-          {!submitted ? (
-            <>
-              <p className="text-gray-400 text-sm mb-6">
-                Enter your email address and we'll send you a link to reset your password.
-              </p>
+          {message && <div className="bg-green-500/10 text-green-400 p-3 rounded mb-4 text-sm">{message}</div>}
+          {error && <div className="bg-red-500/10 text-red-400 p-3 rounded mb-4 text-sm">{error}</div>}
 
-              <form onSubmit={handleSubmit}>
-                <div className="mb-6">
-                  <label className="block text-gray-300 text-sm font-medium mb-2">Email Address</label>
-                  <input
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="Enter your email"
-                    className="w-full bg-gray-700 text-white px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-600 transition"
-                    required
-                  />
-                </div>
-
-                <button
-                  type="submit"
-                  disabled={isLoading}
-                  className="w-full bg-amber-600 text-white py-3 rounded-lg hover:bg-amber-700 transition font-bold disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {isLoading ? 'Sending...' : 'Send Reset Link'}
-                </button>
-              </form>
-            </>
-          ) : (
-            <div className="text-center">
-              <div className="w-16 h-16 bg-green-500/10 border border-green-500/30 rounded-full flex items-center justify-center mx-auto mb-4">
-                <span className="text-green-500 text-2xl">✓</span>
-              </div>
-              <h2 className="text-white text-xl font-bold mb-2">Check Your Email</h2>
-              <p className="text-gray-400 mb-6">
-                We've sent a password reset link to <span className="text-white font-medium">{email}</span>
-              </p>
-              <p className="text-gray-500 text-sm">
-                Don't see it? Check your spam folder or try again.
-              </p>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-1">Email Address</label>
+              <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full bg-gray-700 border border-gray-600 text-white rounded-lg px-4 py-2 focus:ring-2 focus:ring-amber-500 outline-none"
+                  required
+              />
             </div>
-          )}
-        </div>
+            <button
+                type="submit"
+                disabled={isLoading}
+                className="w-full bg-amber-600 hover:bg-amber-700 text-white font-bold py-2 px-4 rounded-lg transition disabled:opacity-50"
+            >
+              {isLoading ? 'Sending...' : 'Send Reset Link'}
+            </button>
+          </form>
 
-        {/* Footer */}
-        <div className="text-center mt-6">
-          <Link to="/login" className="text-amber-600 hover:text-amber-500 transition font-bold">
-            Back to Login
-          </Link>
+          <div className="mt-6 text-center">
+            <Link to="/login" className="text-amber-500 hover:text-amber-400 text-sm">
+              Back to Login
+            </Link>
+          </div>
         </div>
       </div>
-    </div>
   );
 }
 
