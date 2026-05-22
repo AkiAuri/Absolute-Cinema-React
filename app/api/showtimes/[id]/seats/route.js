@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(request, { params }) {
     try {
         // 1. Await the dynamic params (Next.js 15+)
